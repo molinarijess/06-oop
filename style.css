@@ -29,6 +29,7 @@ button {
   color: #fff0f6;
   cursor: pointer;
   font: inherit;
+  margin-top: 1rem;
   padding: 0.5rem 2rem;
 }
 
@@ -64,15 +65,15 @@ button:active {
 }
 
 .product-item {
-  box-shadow: rgba(0, 0, 0, 0.26);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
   margin: 2rem auto;
   max-width: 90%;
-  width: 50rem;
+  width: max-content;
 }
 
 .product-item img {
   height: 20rem;
-  object-fit: cover;
+  object-fit: scale-down;
   width: 100%;
 }
 
