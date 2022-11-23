@@ -7,7 +7,38 @@ class Product {
   }
 }
 
-class ShoppingCart {
+class ElementAttribute {
+  constructor(attrName, attrValue) {
+    this.name = attrName;
+    this.value = attrValue;
+  }
+}
+class Component {
+  constructor(renderHookId, shouldRender = true) {
+    this.hookId = renderHookId;
+    if (shouldRender) {
+      this.render();
+    }
+  }
+
+  render() {}
+
+  createRootElement(tag, cssClasses, attributes) {
+    const rootElement = document.createElement(tag);
+    if (cssClasses) {
+      rootElement.className = cssClasses;
+    }
+    if (attributes && attributes.length > 0) {
+      for (const attr of attributes) {
+        rootElement.setAttribute(attr.name, attr.value);
+      }
+    }
+    document.getElementById(this.hookId).append(rootElement);
+    return rootElement;
+  }
+}
+
+class ShoppingCart extends Component {
   items = [];
 
   set cartItems(value) {
@@ -25,6 +56,10 @@ class ShoppingCart {
     return sum;
   }
 
+  constructor(renderHookId) {
+    super(renderHookId);
+  }
+
   addProduct(product) {
     const updatedItems = [...this.items];
     updatedItems.push(product);
@@ -32,20 +67,20 @@ class ShoppingCart {
   }
 
   render() {
-    const cartEl = document.createElement("section");
+    const cartEl = this.createRootElement("section", "cart");
     cartEl.innerHTML = `
     <h2>Total: £${0}</h2>
     <button>Order Now!</button>
     `;
-    cartEl.className = "cart";
     this.totalOutput = cartEl.querySelector("h2");
-    return cartEl;
   }
 }
 
-class ProductItem {
-  constructor(product) {
+class ProductItem extends Component {
+  constructor(product, renderHookId) {
+    super(renderHookId, false);
     this.product = product;
+    this.render();
   }
 
   addToCart() {
@@ -53,8 +88,7 @@ class ProductItem {
   }
 
   render() {
-    const prodEl = document.createElement("li");
-    prodEl.className = "product-item";
+    const prodEl = this.createRootElement("li", "product-item");
     prodEl.innerHTML = `
     <div>
       <img src="${this.product.imageUrl}" alt="${this.product.title}" />
@@ -68,48 +102,65 @@ class ProductItem {
     `;
     const addCartButton = prodEl.querySelector("button");
     addCartButton.addEventListener("click", this.addToCart.bind(this));
-    return prodEl;
   }
 }
 
-class ProductList {
-  products = [
-    new Product(
-      "Pillow",
-      "https://i.pinimg.com/564x/fb/12/c2/fb12c2b0b2f5b199c34407f62dc58ea6.jpg",
-      "soft pillow",
-      19.99
-    ),
-    new Product(
-      "Rug",
-      "https://cdn.shopify.com/s/files/1/0087/2107/2187/products/ttk3032_eg_2400x.jpg?v=1587113624",
-      "indoor rug",
-      50.99
-    ),
-  ];
-  render() {
-    const prodList = document.createElement("ul");
-    prodList.className = "product-list";
+class ProductList extends Component {
+  products = [];
+
+  constructor(renderHookId) {
+    super(renderHookId);
+    this.fetchProducts();
+  }
+
+  fetchProducts() {
+    this.products = [
+      new Product(
+        "Pillow",
+        "https://i.pinimg.com/564x/fb/12/c2/fb12c2b0b2f5b199c34407f62dc58ea6.jpg",
+        "soft pillow",
+        19.99
+      ),
+      new Product(
+        "Rug",
+        "https://cdn.shopify.com/s/files/1/0087/2107/2187/products/ttk3032_eg_2400x.jpg?v=1587113624",
+        "indoor rug",
+        50.99
+      ),
+      new Product(
+        "Vase",
+        "https://www.sourcelifestyle.com/wp-content/uploads/2022/01/0P5A6850.jpg",
+        "bun vase",
+        10.55
+      ),
+    ];
+    this.renderProducts();
+  }
+
+  renderProducts() {
     for (const prod of this.products) {
-      const productItem = new ProductItem(prod);
-      const prodEl = productItem.render();
-      prodList.append(prodEl);
+      new ProductItem(prod, "prod-list");
     }
-    return prodList;
+  }
+
+  render() {
+    this.createRootElement("ul", "product-list", [
+      new ElementAttribute("id", "prod-list"),
+    ]);
+    if (this.products && this.products.length > 0) {
+      this.renderProducts();
+    }
   }
 }
 
 class Shop {
+  constructor() {
+    this.render();
+  }
+
   render() {
-    const renderHook = document.getElementById("app");
-
-    this.cart = new ShoppingCart();
-    const cartEl = this.cart.render();
-    const productList = new ProductList();
-    const prodListEl = productList.render();
-
-    renderHook.append(cartEl);
-    renderHook.append(prodListEl);
+    this.cart = new ShoppingCart("app");
+    new ProductList("app");
   }
 }
 
@@ -118,7 +169,6 @@ class App {
 
   static init() {
     const shop = new Shop();
-    shop.render();
     this.cart = shop.cart;
   }
 
